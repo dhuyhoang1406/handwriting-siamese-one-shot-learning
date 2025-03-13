@@ -1,4 +1,4 @@
-# One-shot Facial Recognition with Siamese Networks
+# One-shot Facial Recognition with Siamese Neural Networks
 
 [![Paper](https://img.shields.io/badge/paper-arXiv-red)](https://www.cs.cmu.edu/~rsalakhu/papers/oneshot1.pdf)  
 
@@ -36,10 +36,8 @@ The Siamese network compares the test image to each image in the support set, pr
 
 <img src="./images/SNN-Inference.jpg" width="600"> <!-- Thay bằng hình ảnh mô tả quá trình inference -->
 
-<!-- ## B. Instructions
+ ## B. Instructions
 
 ### 1. Data Preparation
 
-This project utilizes the LFW (Labeled Faces in the Wild) dataset, modified for one-shot learning.  You can download a preprocessed version of the dataset here: [data](https://drive.google.com/file/d/1w1YDoRdDsdLhm3xiH2HQj0C_z-CHtowt)
-
-*The structure of the download folder:* -->
+This project utilizes the LFW (Labeled Faces in the Wild) dataset, modified for one-shot learning.  You can download a preprocessed version of the dataset here: [data](https://drive.google.com/file/d/1aFBPnjLxqF_ivYM8Nfb9cXZ-IlETU_v9/view?usp=drive_link)
