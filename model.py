@@ -7,6 +7,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Layer,Conv2D,Dense,MaxPooling2D,Input,Flatten
 import tensorflow as tf
 import uuid
+import time
 # define folder image
 POS_PATH=os.path.join('data','position')
 NEG_PATH=os.path.join('data','negative')
@@ -24,6 +25,7 @@ ANC_PATH=os.path.join('data','anchor')
     #             NEW_PATH = os.path.join(NEG_PATH, file)
     #             os.replace(EX_PATH, NEW_PATH)
 cap = cv2.VideoCapture(0)
+count = 0
 #turn on webcam
 while True:
     # read frame cam
@@ -31,26 +33,36 @@ while True:
     #flip frame 
     frame = cv2.flip(frame, 1)
     # show frame
-    cv2.imshow('camshow',frame[130:130+250,180:180+250,:])
-    # add image to positive folder 
-    if cv2.waitKey(1) & 0XFF == ord('p'): 
-       image=os.path.join(POS_PATH,'{}.jpg'.format(uuid.uuid1()))
-       cv2.imwrite(image,frame[130:130+250,180:180+250,:])
-    # add image to anchor folder 
-    if cv2.waitKey(1) & 0XFF == ord('a'): 
-        image=os.path.join(ANC_PATH,'{}.jpg'.format(uuid.uuid1()))
-        cv2.imwrite(image,frame[130:130+250,180:180+250,:])
-    # dress q to excape
-    if cv2.waitKey(1) & 0XFF == ord('q'): 
+    roi = frame[130:130+250, 180:180+250, :]
+    cv2.imshow('camshow', roi)
+
+    key = cv2.waitKey(1) & 0xFF
+
+    if key == ord('p') or key == ord('a'):
+        folder_path = POS_PATH if key == ord('p') else ANC_PATH
+        print(f"Starting capture to {'POS_PATH' if key == ord('p') else 'ANC_PATH'}...")
+
+        for i in range(500):
+            ret, frame = cap.read()  # Cập nhật frame mới
+            frame = cv2.flip(frame, 1)  # Đảo ngược khung hình
+            roi = frame[130:130+250, 180:180+250, :]
+            
+            image_path = os.path.join(folder_path, f"{uuid.uuid1()}.jpg")
+            cv2.imwrite(image_path, roi)
+            print(f"Saved {i+1}/500 to {folder_path}")
+
+            time.sleep(0.1)  # Chờ 3 giây trước khi chụp tiếp
+
+    if key == ord('q'):  # Thoát chương trình
         break
 # Release the webcam
 cap.release()
 # Close the image show frame
 cv2.destroyAllWindows()
 # get 1000 image from folder
-anchors= tf.data.Dataset.list_files(ANC_PATH+'\*jdg',1000)
-positives= tf.data.Dataset.list_files(POS_PATH+'\*jdg',1000)
-negatives= tf.data.Dataset.list_files(NEG_PATH+'\*jdg',1000)
+anchors= tf.data.Dataset.list_files(ANC_PATH+'\*jdg',500)
+positives= tf.data.Dataset.list_files(POS_PATH+'\*jdg',500)
+negatives= tf.data.Dataset.list_files(NEG_PATH+'\*jdg',500)
 # Preprocess resize image
 def preProcessResize(path):
     #Convert jdg to bytecode
