@@ -9,7 +9,7 @@ import tensorflow as tf
 import uuid
 import time
 # define folder image
-POS_PATH=os.path.join('data','position')
+POS_PATH=os.path.join('data','positive')
 NEG_PATH=os.path.join('data','negative')
 ANC_PATH=os.path.join('data','anchor')
 # create folder
@@ -83,3 +83,74 @@ dataNegatives=tf.data.Dataset(anchors,negatives,tf.data.Dataset.from_tensor_slic
 data=dataPositives.concatenate(dataNegatives)
 def preProcessRead(image_input,validation_img,label):
     return (preProcessResize(image_input),preProcessResize(validation_img),label)
+# Build dataloader 
+data = data.map(preProcessRead)
+data = data.cache()
+data = data.shuffle(buffer_size=1024)
+# Training partition
+train_data = data.take(round(len(data)*.7))
+train_data = train_data.batch(16)
+train_data = train_data.prefetch(8)
+# Testing partition
+test_data = data.skip(round(len(data)*.7))
+test_data = test_data.take(round(len(data)*.3))
+test_data = test_data.batch(16)
+test_data = test_data.prefetch(8)
+# make 
+def make_embedding():
+    inp = Input(shape=(100,100,3),name='input_image')
+    #First Layer
+    c1 = Conv2D(64,(10,10),activation='relu')(inp)
+    m1 = MaxPooling2D(64,(2,2),padding='same')(c1)
+    #Second Layer
+    c2 = Conv2D(128, (7,7),activation='relu')(m1)
+    m2 = MaxPooling2D(64, (2,2),padding='same')(c2)
+    #Third Layer
+    c3 = Conv2D(64,(10,10),activation='relu')(m2)
+    m3 = MaxPooling2D(64,(2,2),padding='same')(c3)
+    #Final Layer
+    c4 = Conv2D(64,(10,10),activation='relu')(m3)
+    f1= Flatten()(c4)
+    d1= Dense(4096,activatiom='sigmoid')(f1)
+    return Model(inputs=[inp], outputs=[d1], name='embedding')
+#init siamese modal
+siamese_model = make_embedding()
+#set up function loss and optimize
+bcl=tf._losses.BinaryCrossentropy()
+opt= tf.keras.optimizers.Adam(1e-4)
+checkpoint_dir = './training_checkpoints'
+checkpoint_prefix = os.path.join(checkpoint_dir, 'ckpt')
+checkpoint = tf.train.Checkpoint(opt=opt, siamese_model=siamese_model)
+#build function train
+@tf_function
+def train_step(batch):
+     # Record all of our operations 
+    with tf.GradientTape() as tape:
+        # Get anchor and positive/negative image
+        X=batch[:2]
+        y=batch[2]
+        yhat=siamese_model(X,training=True)
+        loss=bcl(y,yhat)
+    # Calculate gradients
+    grad = tape.gradient(loss, siamese_model.trainable_variables)
+    
+    # Calculate updated weights and apply to siamese model
+    opt.apply_gradients(zip(grad, siamese_model.trainable_variables))
+    
+    # Return loss
+    return loss
+def train(data, EPOCHS):
+    # Loop through epochs
+    for epoch in range(1, EPOCHS+1):
+        print('\n Epoch {}/{}'.format(epoch, EPOCHS))
+        progbar = tf.keras.utils.Progbar(len(data))
+        
+        # Loop through each batch
+        for idx, batch in enumerate(data):
+            # Run train step here
+            train_step(batch)
+            progbar.update(idx+1)
+        
+        # Save checkpoints
+        if epoch % 10 == 0: 
+            checkpoint.save(file_prefix=checkpoint_prefix)
