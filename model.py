@@ -90,7 +90,7 @@ data = data.shuffle(buffer_size=1024)
 # Training partition
 train_data = data.take(round(len(data)*.7))
 train_data = train_data.batch(16)
-train_data = train_data.prefetch(8)
+train_data = train_data.prefetch(8) 
 # Testing partition
 test_data = data.skip(round(len(data)*.7))
 test_data = test_data.take(round(len(data)*.3))
