@@ -159,6 +159,6 @@ Mô hình đạt **92% độ chính xác** trên bài toán phân loại một l
 - Omniglot dataset: [Liên hệ Brenden Lake](mailto:brenden@cs.nyu.edu).
 
 ## Liên hệ
-Nếu bạn có câu hỏi hoặc cần hỗ trợ, vui lòng mở issue trên repository này hoặc liên hệ qua email: [địa chỉ email của bạn].
+Nếu bạn có câu hỏi hoặc cần hỗ trợ, vui lòng mở issue trên repository này hoặc liên hệ qua email: [dhuyhoang181@gmail.com].
 
 ---
